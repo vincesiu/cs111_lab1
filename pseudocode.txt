@@ -1,0 +1,23 @@
+put on command stack
+
+If encounter new operator:
+	If operator stack == NULL:
+		Add new operator to operator_stack
+	Else
+		If Precedence(new operator) > precedence(top op):
+			Add new operator to operator_stack
+		Else
+			While top op != (  &&
+				precedence(new op) <= precedence (top op):
+				operator = operator_stack.pop()
+				second_command= command_stack.pop()
+				first_command = command_stack.pop()
+				new_command = combine(first_com, second_com, ....)
+				comand_stack.push(new_command)
+				top_operator = operator_stack.peek()
+				if top_operator == NULL:
+					break
+		operator_stack.push(new operator)
+		blah blah
+
+process whatever left in operator stack
