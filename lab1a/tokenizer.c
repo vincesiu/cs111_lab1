@@ -1,4 +1,6 @@
 #include <stdio.h>
+
+isOperatorCha
 /*
 int isValidOperator(struct Token *foo) {
 	if (foo->len == 1) {
@@ -32,13 +34,17 @@ int isValidWord() {
 
 
 
+void tokenize(char *word) 
+{
+    int idx = 0;
+    while(word[idx] != '\0') {
+        printf("lawl\n");			
+        idx++;
+    }
+}
 
 int main (int argc, char const *argv[])
 {
-	int idx = 0;
-	while(argv[1][idx] != '\0') {
-		printf("lawl\n");			
-		idx++;
-	}
-	return 0;
+    tokenize(argv[1]);
+    return 0;
 }
