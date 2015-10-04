@@ -62,9 +62,9 @@ int isOperatorChar(char c)
     case '<':
     case '>':
     case '&':
-        return true;
+        return TRUE;
     default:
-        return false;
+        return FALSE;
   }
 }
 
