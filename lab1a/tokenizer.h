@@ -4,15 +4,13 @@ typedef FALSE 0
 
 struct Token 
 {
-  enum token_type
-  {
-    COMMAND,
-    OPERATOR,
-  };
-  
   char *word;
+  enum token_type {COMMAND, OPERATOR, OPERATORINCOMPLETE} type;
   int len;
   int line_num;
   struct Token *next;
-  token_type type;
 }
+
+int isOperatorChar(char c);
+int isCommandChar(char c);
+

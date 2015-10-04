@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-isOperatorCha
 /*
 int isValidOperator(struct Token *foo) {
 	if (foo->len == 1) {
@@ -36,15 +35,60 @@ int isValidWord() {
 
 void tokenize(char *word) 
 {
-    int idx = 0;
-    while(word[idx] != '\0') {
-        printf("lawl\n");			
-        idx++;
-    }
+  int idx = 0;
+  struct Token cur = malloc(sizeof(struct Token)); 
+  for (; word[idx] != '\0'; idx++)
+  {
+   1 = 1;
+  }
+
 }
 
 int main (int argc, char const *argv[])
 {
     tokenize(argv[1]);
     return 0;
+}
+
+
+int isOperatorChar(char c)
+{
+  switch(c) 
+  {
+    case '|': 
+    case ';':
+    case '(':
+    case ')':
+    case '<':
+    case '>':
+    case '&':
+        return true;
+    default:
+        return false;
+  }
+}
+
+int isCommandChar(char c)
+{
+  if ('a' <= c && c <= 'z')
+    return true;
+  if ('A' <= c && c <= 'Z')
+    return true;
+  switch(c)
+  {
+    case '!': 
+    case '%':
+    case '+':
+    case ',':
+    case '-':
+    case '.':
+    case '/':
+    case ':':
+    case '@':
+    case '^':
+    case '_':
+      return true;
+    default:
+      return false;
+  }
 }
