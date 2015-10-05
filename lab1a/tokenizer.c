@@ -7,16 +7,12 @@ void tokenize(const char *word)
 {
   subtoken *head = subtoken_init();
   subtoken *cur_subtoken = head; 
-  subtoken *old_subtoken = head;
-
-  word = "a|||b";
 
   int idx = 0;
   char cur_char;
 
   while (word[idx] != '\0')
   {
-
     cur_char = word[idx];
 
     if (cur_subtoken->type == S_NULLTOKEN)
@@ -50,7 +46,7 @@ void tokenize(const char *word)
 
         if (cur_char != '|' && cur_char != '&')
         {
-          cur_subtoken = subtoken_addNew(cur_subtoken);
+          subtoken_addNew(&cur_subtoken);
         }
       }
       else if (isCommandChar(cur_char))
@@ -63,7 +59,7 @@ void tokenize(const char *word)
       else if (cur_char == '\n')
       {
         cur_subtoken->type = S_NEWLINE;
-        cur_subtoken = subtoken_addNew(cur_subtoken);
+        subtoken_addNew(&cur_subtoken);
       }
       else if (cur_char != ' ' && cur_char != '\t')
       {
@@ -89,7 +85,7 @@ void tokenize(const char *word)
       {
         cur_subtoken->type = S_PIPE; 
       }
-      cur_subtoken = subtoken_addNew(cur_subtoken);
+      subtoken_addNew(&cur_subtoken);
     }
 
 
@@ -101,7 +97,7 @@ void tokenize(const char *word)
       {
         cur_subtoken->type == S_AND;
         idx++;
-        cur_subtoken = subtoken_addNew(cur_subtoken);
+        subtoken_addNew(&cur_subtoken);
       }
       else
       {
@@ -110,11 +106,14 @@ void tokenize(const char *word)
       }
     }
 
+
+
+
     else if (cur_subtoken->type == S_COMMAND)
     {
       if (!isCommandChar(cur_char))
       {
-        cur_subtoken = subtoken_addNew(cur_subtoken); 
+        subtoken_addNew(&cur_subtoken); 
       }
       else
       {
@@ -131,6 +130,7 @@ void tokenize(const char *word)
   }
 
 
+  
   if (cur_subtoken->type == S_INCOMPLETEOR || cur_subtoken->type == S_INCOMPLETEAND) 
     abort();
 
@@ -140,13 +140,8 @@ void tokenize(const char *word)
 
 int main (int argc, char const *argv[])
 {
-  if (argc == 2)
-    tokenize(argv[1]);
-  else
-  {
-    printf("Please provide one argument to the script.");
-    abort();
-  }
+  char *input = "echo -v < foo > bar";
+  tokenize(input);
   return 0;
 }
 
@@ -258,8 +253,8 @@ void subtoken_debug(subtoken *head)
   }
 }
 
-subtoken *subtoken_addNew(subtoken *head)
+void subtoken_addNew(subtoken **head)
 {
-  head->next = subtoken_init(); 
-  return head->next;
+  (*head)->next = subtoken_init(); 
+  *head = (*head)->next; 
 }

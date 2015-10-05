@@ -55,7 +55,7 @@ int isCommandChar(char c);
 
 
 subtoken *subtoken_init();
-subtoken *subtoken_addNew(subtoken *cur_subtoken);
+void subtoken_addNew(subtoken **cur_subtoken);
 subtoken *subtoken_nullTokenHandle(char c);
 void subtoken_debug(subtoken *head);
 
