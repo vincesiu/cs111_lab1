@@ -135,7 +135,7 @@ void tokenize(const char *word)
     abort();
 
   subtoken_debug(head);
-
+  subtoken_destructor(head);
 }
 
 int main (int argc, char const *argv[])
@@ -257,4 +257,14 @@ void subtoken_addNew(subtoken **head)
 {
   (*head)->next = subtoken_init(); 
   *head = (*head)->next; 
+}
+
+void subtoken_destructor(subtoken *head)
+{
+  while(head != NULL)
+  {
+    if (head->word != NULL)
+      free(head->word);
+    head = head->next;
+  }
 }

@@ -56,9 +56,8 @@ int isCommandChar(char c);
 
 subtoken *subtoken_init();
 void subtoken_addNew(subtoken **cur_subtoken);
-subtoken *subtoken_nullTokenHandle(char c);
 void subtoken_debug(subtoken *head);
-
+void subtoken_destructor(subtoken *head);
 
 /*
 struct Token *token_init();
