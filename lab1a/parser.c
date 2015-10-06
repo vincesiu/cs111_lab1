@@ -160,6 +160,12 @@ int precedence_cmp(command_t a_cmd, enum token_type b)
 	}
 }
 
+void error_parsing(int lineno, char* msg)
+{
+	fprintf(stderr, "%d: %s\n", lineno, msg);
+	exit(1);
+}
+
 command_stream_t parse_tokens(token* T)
 {
 	command_stream_t stream = malloc(sizeof(struct command_stream));
@@ -204,10 +210,14 @@ command_stream_t parse_tokens(token* T)
 		}
 		else if (T->type == INPUT)
 		{
+			if (!simple_started)
+				error_parsing(T->line_num, "semantic error - input attempted without simple command");
 			current->input = T->word;
 		}
 		else if (T->type == OUTPUT)
 		{
+			if (!simple_started)
+				error_parsing(T->line_num, "semantic error - output attempted without simple command");
 			current->output = T->word;
 		}
 
@@ -222,6 +232,8 @@ command_stream_t parse_tokens(token* T)
 				simple_started = 0;
 				stack_push(command_stack, current);
 			}
+			else
+				error_parsing(T->line_num, "semantic error - operator attempted without simple command")
 
 			if (T->type == STARTNEWCOMMAND)
 			{

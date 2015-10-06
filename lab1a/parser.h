@@ -28,6 +28,7 @@ struct command_stream
 };
 
 void push_command_stream(command_stream_t cs, command_t cmd);
+void error_parsing(int lineno, char* msg);
 
 command_t construct_command(enum command_type t);
 void pop_one_operator(stack* cstack, stack* opstack);
