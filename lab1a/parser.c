@@ -132,8 +132,13 @@ void pop_one_operator(stack* cstack, stack* opstack)
 }
 
 // true if a >= b in terms of precedence
-int precedence_cmp(enum command_type a, enum token_type b)
+int precedence_cmp(command_t a_cmd, enum token_type b)
 {
+	if (a_cmd == NULL)
+		return false;
+
+	enum command_type a = a_cmd->type;
+
 	if (a == SUBSHELL_COMMAND)
 		return false;
 
@@ -255,13 +260,10 @@ command_stream_t parse_tokens(token* T)
 					command_t top_op = stack_top(op_stack);
 
 					// precedence_cmp is true if top_op has greater or equal precedence to T->type
-					if (top_op != NULL)
+					while (precedence_cmp(top_op, T->type))
 					{
-						while (precedence_cmp(top_op->type, T->type))
-						{
-							pop_one_operator(command_stack, op_stack);
-							top_op = stack_top(op_stack);
-						}
+						pop_one_operator(command_stack, op_stack);
+						top_op = stack_top(op_stack);
 					}
 				}
 
