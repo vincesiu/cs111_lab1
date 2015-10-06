@@ -255,10 +255,13 @@ command_stream_t parse_tokens(token* T)
 					command_t top_op = stack_top(op_stack);
 
 					// precedence_cmp is true if top_op has greater or equal precedence to T->type
-					while (precedence_cmp(top_op->type, T->type))
+					if (top_op != NULL)
 					{
-						pop_one_operator(command_stack, op_stack);
-						top_op = stack_top(op_stack);
+						while (precedence_cmp(top_op->type, T->type))
+						{
+							pop_one_operator(command_stack, op_stack);
+							top_op = stack_top(op_stack);
+						}
 					}
 				}
 
