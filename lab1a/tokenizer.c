@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "command-internals.h"
+#include "command.h"
 #include "tokenizer.h"
+#include "parser.h"
 
-#define INPUTSTRING ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
+#define INPUTSTRING "a && b || c" // ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
 #define DEBUG_TOKENIZER true
 
 #if DEBUG_TOKENIZER
@@ -18,12 +21,8 @@ int main (int argc, char const *argv[])
   token *head_token = tokenize(head_subtoken);
   token_debug(head_token);
 
-  subtoken_destructor(head_subtoken);
-  token_destructor(head_token);
-  return 0;
 
-  /*
-  command_stream_t streamtest = parse_tokens(T);
+  command_stream_t streamtest = parse_tokens(head_token);
   command_stream_t printer = streamtest;
 
   while (printer != NULL)
@@ -31,8 +30,10 @@ int main (int argc, char const *argv[])
     print_command(printer->tree);
     printer = printer->next;
   }
-  getchar();
-  */
+
+  subtoken_destructor(head_subtoken);
+  token_destructor(head_token);
+  return 0;
 }
 
 #endif
