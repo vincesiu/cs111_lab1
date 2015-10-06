@@ -1,3 +1,7 @@
+#ifndef TOKENIZER_H
+#define TOKENIZER_H
+
+
 #define true 1
 #define false 0
 
@@ -67,8 +71,5 @@ token *token_init(subtoken *input);
 void *token_debug(token *head);
 void *token_destructor(token *head);
 
-/*
-struct Token *token_init();
-void token_setType(enum token_type type);
-void token_addChar(char c);
-*/
+
+#endf //TOKENIZER_H
