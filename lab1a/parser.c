@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "command-internals.h"
 #include "command.h"
@@ -162,7 +163,7 @@ int precedence_cmp(command_t a_cmd, enum token_type b)
 
 void error_parsing(int lineno, char* msg)
 {
-	fprintf(stderr, "%d: %s\n", lineno, msg);
+	fprintf(stderr, "Line %d: %s\n", lineno, msg);
 	exit(1);
 }
 
@@ -179,6 +180,7 @@ command_stream_t parse_tokens(token* T)
 	char ** curword = NULL;
 	int curwordlen = 0;
 	int simple_started = 0;
+	int subshell_started = 0;
 
 	command_t current = NULL;
 
@@ -211,13 +213,13 @@ command_stream_t parse_tokens(token* T)
 		else if (T->type == INPUT)
 		{
 			if (!simple_started)
-				error_parsing(T->line_num, "semantic error - input attempted without simple command");
+				error_parsing(T->line_num, "semantic error - input attempted without simple command\n");
 			current->input = T->word;
 		}
 		else if (T->type == OUTPUT)
 		{
 			if (!simple_started)
-				error_parsing(T->line_num, "semantic error - output attempted without simple command");
+				error_parsing(T->line_num, "semantic error - output attempted without simple command\n");
 			current->output = T->word;
 		}
 
@@ -229,14 +231,15 @@ command_stream_t parse_tokens(token* T)
 				current->u.word = curword;
 				curword = NULL;
 				curwordlen = 0;
-				simple_started = 0;
 				stack_push(command_stack, current);
 			}
-			else
-				error_parsing(T->line_num, "semantic error - operator attempted without simple command")
+				
 
 			if (T->type == STARTNEWCOMMAND)
 			{
+				if (subshell_started > 0)
+					error_parsing(T->line_num, "semantic error - reached end of command with open subshell");
+
 				while (op_stack->empty == 0)
 					pop_one_operator(command_stack, op_stack);
 
@@ -247,9 +250,13 @@ command_stream_t parse_tokens(token* T)
 			{
 				current = construct_command(SUBSHELL_COMMAND);
 				stack_push(op_stack, current);
+				subshell_started++;
 			}
 			else if (T->type == SUBSHELLRIGHT)
 			{
+				if (subshell_started == 0)
+					error_parsing(T->line_num, "semantic error - invalid subshell closure attempted");
+
 				command_t top_op = stack_top(op_stack);
 				while (top_op->type != SUBSHELL_COMMAND)
 				{
@@ -261,12 +268,16 @@ command_stream_t parse_tokens(token* T)
 				stack_pop(command_stack);
 				top_op->u.subshell_command = top_cmd;
 				stack_push(command_stack, top_op);
+				subshell_started--;
 			}
 
 			// Standard operator handling
 			//if (T->type == PIPE || T->type == AND || T->type == OR || T->type == SEQUENCE)
 			else
 			{
+				if (!simple_started)
+					error_parsing(T->line_num, "semantic error - operator attempted without simple command\n");
+
 				if (op_stack->empty == 0)
 				{
 					command_t top_op = stack_top(op_stack);
@@ -288,6 +299,8 @@ command_stream_t parse_tokens(token* T)
 				}
 				stack_push(op_stack, current);
 			}
+
+			simple_started = 0;
 		}
 	}
 
@@ -299,6 +312,9 @@ command_stream_t parse_tokens(token* T)
 		simple_started = 0;
 		stack_push(command_stack, current);
 	}
+
+	if (subshell_started > 0)
+		error_parsing(T->line_num, "semantic error - reached end of command with open subshell");
 
 	while (op_stack->empty == 0)
 		pop_one_operator(command_stack, op_stack);
