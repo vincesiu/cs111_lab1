@@ -21,6 +21,18 @@ int main (int argc, char const *argv[])
   subtoken_destructor(head_subtoken);
   token_destructor(head_token);
   return 0;
+
+  /*
+  command_stream_t streamtest = parse_tokens(T);
+  command_stream_t printer = streamtest;
+
+  while (printer != NULL)
+  {
+    print_command(printer->tree);
+    printer = printer->next;
+  }
+  getchar();
+  */
 }
 
 #endif
