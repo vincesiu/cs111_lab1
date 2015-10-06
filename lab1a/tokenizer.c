@@ -3,7 +3,65 @@
 
 #include "tokenizer.h"
 
-#define INPUTSTRING "echo || echo && echo"
+#define INPUTSTRING ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
+
+int main (int argc, char const *argv[])
+{
+  char *input = INPUTSTRING;
+
+  subtoken *head_subtoken = subtokenize(input);
+  subtoken_debug(head_subtoken);
+
+  token *head_token = tokenize(head_subtoken);
+  token_debug(head_token);
+
+  subtoken_destructor(head_subtoken);
+  token_destructor(head_token);
+  return 0;
+}
+
+
+int isOperatorChar(char c)
+{
+  switch(c) 
+  {
+    case '|': 
+    case ';':
+    case '(':
+    case ')':
+    case '<':
+    case '>':
+    case '&':
+      return true;
+    default:
+      return false;
+  }
+}
+
+int isCommandChar(char c)
+{
+  if ('a' <= c && c <= 'z')
+    return true;
+  if ('A' <= c && c <= 'Z')
+    return true;
+  switch(c)
+  {
+    case '!': 
+    case '%':
+    case '+':
+    case ',':
+    case '-':
+    case '.':
+    case '/':
+    case ':':
+    case '@':
+    case '^':
+    case '_':
+      return true;
+    default:
+      return false;
+  }
+}
 
 subtoken *subtokenize(const char *word) 
 {
@@ -62,6 +120,10 @@ subtoken *subtokenize(const char *word)
       {
         cur_subtoken->type = S_NEWLINE;
         subtoken_addNew(&cur_subtoken);
+      }
+      else if (cur_char == '#')
+      {
+        cur_subtoken->type = S_COMMENT;
       }
       else if (cur_char != ' ' && cur_char != '\t')
       {
@@ -147,63 +209,6 @@ subtoken *subtokenize(const char *word)
 
 }
 
-int main (int argc, char const *argv[])
-{
-  char *input = INPUTSTRING;
-
-  subtoken *head_subtoken = subtokenize(input);
-  subtoken_debug(head_subtoken);
-
-  token *head_token = tokenize(head_subtoken);
-  token_debug(head_token);
-
-  subtoken_destructor(head_subtoken);
-  token_destructor(head_token);
-  return 0;
-}
-
-
-int isOperatorChar(char c)
-{
-  switch(c) 
-  {
-    case '|': 
-    case ';':
-    case '(':
-    case ')':
-    case '<':
-    case '>':
-    case '&':
-      return true;
-    default:
-      return false;
-  }
-}
-
-int isCommandChar(char c)
-{
-  if ('a' <= c && c <= 'z')
-    return true;
-  if ('A' <= c && c <= 'Z')
-    return true;
-  switch(c)
-  {
-    case '!': 
-    case '%':
-    case '+':
-    case ',':
-    case '-':
-    case '.':
-    case '/':
-    case ':':
-    case '@':
-    case '^':
-    case '_':
-      return true;
-    default:
-      return false;
-  }
-}
 
 subtoken *subtoken_init()
 {
@@ -319,12 +324,33 @@ token *tokenize(subtoken *subtoken_head)
     {
       if (count_newline > 0)
       {
-        if (count_newline == 1)
+        if (prev_token->type == INPUT || prev_token->type == OUTPUT)
         {
-          cur_token->next = token_init(cur_subtoken);
-          cur_token = cur_token->next;
-
+          printf("Error, a newline followed a < or >");
+          abort();
         }
+        if (cur_subtoken->type != S_SUBSHELLLEFT && cur_subtoken->type != S_SUBSHELLRIGHT && cur_subtoken->type != S_COMMAND)
+        {
+          printf("Error, newline may not precede this token: %i", cur_subtoken->type);
+          abort();
+        }
+
+        if (prev_token->type == SIMPLE)
+        {
+          if (count_newline == 1)
+          {
+            cur_token->next = token_init(cur_subtoken);
+            cur_token = cur_token->next;
+            cur_token->type = SEQUENCE;
+          }
+          else if (count_newline > 1)
+          {
+            cur_token->next = token_init(cur_subtoken);
+            cur_token = cur_token->next;
+            cur_token->type = STARTNEWCOMMAND;
+          }
+        }
+        count_newline = 0;
       }
       if (cur_token == NULL)
       {
@@ -370,6 +396,7 @@ token *tokenize(subtoken *subtoken_head)
           printf("What happened....");
           abort();
       }
+      prev_token = cur_token;
       cur_subtoken = cur_subtoken->next;
     }
   }
@@ -441,8 +468,8 @@ void *token_destructor(token *head)
   while(head != NULL)
   {
     prev = head;
-    if (head->word != NULL)
-      free(head->word);
+//  if (head->word != NULL)
+//    free(head->word);
     head = head->next;
     free(prev);
   }
