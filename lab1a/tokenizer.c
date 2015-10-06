@@ -6,7 +6,7 @@
 #include "tokenizer.h"
 #include "parser.h"
 
-#define INPUTSTRING "a && b || c" // ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
+#define INPUTSTRING "a" // ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
 #define DEBUG_TOKENIZER true
 
 #if DEBUG_TOKENIZER
