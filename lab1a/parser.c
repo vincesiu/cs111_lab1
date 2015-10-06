@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "command-internals.h"
 #include "command.h"
@@ -233,7 +234,7 @@ command_stream_t parse_tokens(token* T)
 				stack_push(command_stack, current);
 			}
 			else
-				error_parsing(T->line_num, "semantic error - operator attempted without simple command")
+				error_parsing(T->line_num, "semantic error - operator attempted without simple command");
 
 			if (T->type == STARTNEWCOMMAND)
 			{

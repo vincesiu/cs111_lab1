@@ -6,7 +6,7 @@
 #include "tokenizer.h"
 #include "parser.h"
 
-#define INPUTSTRING "a<b>c|d<e>f|g<h>i"
+#define INPUTSTRING "a;"
 #define DEBUG_TOKENIZER true
 
 #if DEBUG_TOKENIZER
@@ -16,7 +16,7 @@ int main (int argc, char const *argv[])
   char *input = INPUTSTRING;
 
   subtoken *head_subtoken = subtokenize(input);
-  //subtoken_debug(head_subtoken);
+  subtoken_debug(head_subtoken);
 
   token *head_token = tokenize(head_subtoken);
   token_debug(head_token);
@@ -250,6 +250,8 @@ subtoken *subtokenize(const char *word)
     abort();
   }
 
+  
+
   return head;
 }
 
@@ -281,6 +283,9 @@ void subtoken_debug(subtoken *head)
     {
       case S_NULLTOKEN:
         printf("NULLTOKEN\n");
+        break;
+      case S_SEQUENCE:
+        printf("SEQUENCE\n");
         break;
       case S_NEWLINE:
         printf("NEWLINE\n");
@@ -367,6 +372,10 @@ token *tokenize(subtoken *subtoken_head)
 
   while (cur_subtoken != NULL)
   {
+    if (cur_subtoken->type == S_NULLTOKEN && cur_subtoken->next == NULL)
+    {
+      break;
+    }
     if (cur_subtoken->type == S_NULLTOKEN || cur_subtoken->type == S_INCOMPLETEOR || cur_subtoken->type == S_INCOMPLETEAND)
     {
       printf("Error, invalid token in subtoken stream when tokenizing");
