@@ -6,7 +6,7 @@
 #include "tokenizer.h"
 #include "parser.h"
 
-#define INPUTSTRING "a" // ": : : \n\n a b<c > d \n\n a&&b||\nc &&\nd | e && f|\n\ng < h"
+#define INPUTSTRING "a<b>c|d<e>f|g<h>i"
 #define DEBUG_TOKENIZER true
 
 #if DEBUG_TOKENIZER
@@ -16,7 +16,7 @@ int main (int argc, char const *argv[])
   char *input = INPUTSTRING;
 
   subtoken *head_subtoken = subtokenize(input);
-  subtoken_debug(head_subtoken);
+  //subtoken_debug(head_subtoken);
 
   token *head_token = tokenize(head_subtoken);
   token_debug(head_token);
@@ -446,9 +446,27 @@ token *tokenize(subtoken *subtoken_head)
           break;
         case S_INPUT:
           cur_token->type = INPUT;
+          //hackerz fix
+          if (cur_subtoken->next->type != S_COMMAND)
+          {
+            printf("Error: simple command does not follow input");
+            abort();
+          }
+          cur_token->word = cur_subtoken->next->word;
+          cur_token->length = cur_subtoken->next->length;
+          cur_subtoken = cur_subtoken->next;
           break;
         case S_OUTPUT:
           cur_token->type = OUTPUT;
+          //hackerz fix
+          if (cur_subtoken->next->type != S_COMMAND)
+          {
+            printf("Error: simple command does not follow output");
+            abort();
+          }
+          cur_token->word = cur_subtoken->next->word;
+          cur_token->length = cur_subtoken->next->length;
+          cur_subtoken = cur_subtoken->next;
           break;
         case S_SUBSHELLLEFT:
           cur_token->type = SUBSHELLLEFT;
