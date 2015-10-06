@@ -31,6 +31,6 @@ void push_command_stream(command_stream_t cs, command_t cmd);
 
 command_t construct_command(enum command_type t);
 void pop_one_operator(stack* cstack, stack* opstack);
-int precedence_cmp(enum command_type a, enum token_type b);
+int precedence_cmp(command_t a_cmp, enum token_type b);
 
 command_stream_t parse_tokens(token* T);
