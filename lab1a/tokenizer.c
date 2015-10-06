@@ -81,12 +81,15 @@ subtoken *subtokenize(const char *word)
   int idx = 0;
   char cur_char;
   int flag_readChar = false;
+  int line_num = 0;
+
   cur_char = word[0];
 
   while (cur_char != '\0')
   {
     if (cur_subtoken->type == S_NULLTOKEN)
     {
+      cur_subtoken->line_num = line_num;
       if (isOperatorChar(cur_char))
       {
         switch(cur_char)
@@ -248,6 +251,7 @@ subtoken *subtoken_init()
   foo->word = NULL;
   foo->next = NULL;
   foo->type = S_NULLTOKEN;
+  foo->line_num = 0;
 
   return foo;
 }
@@ -461,6 +465,7 @@ token *token_init(subtoken *input)
   foo->length = input->length;
   foo->word = input->word;
   foo->next = NULL;
+  foo->line_num = input->line_num;
 
   return foo;
 }

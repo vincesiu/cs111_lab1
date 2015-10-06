@@ -28,6 +28,7 @@ typedef struct Subtoken
   char *word;
   int length;
   struct Subtoken *next;
+  int line_num;
 } subtoken;
 
 
@@ -53,6 +54,7 @@ typedef struct Token
   char *word;
   int length;
   struct Token *next;
+  int line_num;
 } token;
 
 int isOperatorChar(char c);
@@ -72,4 +74,4 @@ void *token_debug(token *head);
 void *token_destructor(token *head);
 
 
-#endf //TOKENIZER_H
+#endif //TOKENIZER_H
