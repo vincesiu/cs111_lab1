@@ -3,7 +3,9 @@
 
 #include "tokenizer.h"
 
-void tokenize(const char *word) 
+#define INPUTSTRING "echo || echo && echo"
+
+subtoken *subtokenize(const char *word) 
 {
   subtoken *head = subtoken_init();
   subtoken *cur_subtoken = head; 
@@ -95,7 +97,7 @@ void tokenize(const char *word)
     {
       if (cur_char == '&')
       {
-        cur_subtoken->type == S_AND;
+        cur_subtoken->type = S_AND;
         idx++;
         subtoken_addNew(&cur_subtoken);
       }
@@ -124,24 +126,39 @@ void tokenize(const char *word)
       }
     }
 
-
+    else if (cur_subtoken->type == S_COMMENT)
+    {
+      if (cur_char == '\n')
+      {
+        subtoken_addNew(&cur_subtoken); 
+      }
+      idx++;
+    } 
 
 
   }
 
 
-  
+
   if (cur_subtoken->type == S_INCOMPLETEOR || cur_subtoken->type == S_INCOMPLETEAND) 
     abort();
 
-  subtoken_debug(head);
-  subtoken_destructor(head);
+  return head;
+
 }
 
 int main (int argc, char const *argv[])
 {
-  char *input = "echo -v < foo > bar";
-  tokenize(input);
+  char *input = INPUTSTRING;
+
+  subtoken *head_subtoken = subtokenize(input);
+  subtoken_debug(head_subtoken);
+
+  token *head_token = tokenize(head_subtoken);
+  token_debug(head_token);
+
+  subtoken_destructor(head_subtoken);
+  token_destructor(head_token);
   return 0;
 }
 
@@ -261,10 +278,172 @@ void subtoken_addNew(subtoken **head)
 
 void subtoken_destructor(subtoken *head)
 {
+  subtoken *prev = NULL;
+
   while(head != NULL)
   {
+    prev = head;
     if (head->word != NULL)
       free(head->word);
     head = head->next;
+    free(prev);
+  }
+}
+
+
+token *tokenize(subtoken *subtoken_head)
+{
+  subtoken *cur_subtoken = subtoken_head;
+  token *cur_token = NULL;
+  token *prev_token = NULL;
+  token *token_head = NULL;
+
+  int count_newline = 0;
+
+  while (cur_subtoken != NULL)
+  {
+    if (cur_subtoken->type == S_NULLTOKEN || cur_subtoken->type == S_INCOMPLETEOR || cur_subtoken->type == S_INCOMPLETEAND)
+    {
+      printf("Error, invalid token in subtoken stream when tokenizing");
+      abort();
+    }
+    else if (cur_subtoken->type == S_NEWLINE)
+    {
+      if (cur_token != NULL)
+      {
+        count_newline++;
+      }
+      cur_subtoken = cur_subtoken->next;
+    }
+    else
+    {
+      if (count_newline > 0)
+      {
+        if (count_newline == 1)
+        {
+          cur_token->next = token_init(cur_subtoken);
+          cur_token = cur_token->next;
+
+        }
+      }
+      if (cur_token == NULL)
+      {
+        cur_token = token_init(cur_subtoken);
+        token_head = cur_token;
+      }
+      else
+      {
+        cur_token->next = token_init(cur_subtoken);
+        cur_token = cur_token->next;
+      }
+
+      switch(cur_subtoken->type)
+      {
+        case S_COMMAND:
+          cur_token->type = SIMPLE;
+          break;
+        case S_SEQUENCE:
+          cur_token->type = SEQUENCE;
+          break;
+        case S_AND:
+          cur_token->type = AND;
+          break;
+        case S_OR:
+          cur_token->type = OR;
+          break;
+        case S_PIPE:
+          cur_token->type = PIPE;
+          break;
+        case S_INPUT:
+          cur_token->type = INPUT;
+          break;
+        case S_OUTPUT:
+          cur_token->type = OUTPUT;
+          break;
+        case S_SUBSHELLLEFT:
+          cur_token->type = SUBSHELLLEFT;
+          break;
+        case S_SUBSHELLRIGHT:
+          cur_token->type = SUBSHELLRIGHT;
+          break;
+        default:
+          printf("What happened....");
+          abort();
+      }
+      cur_subtoken = cur_subtoken->next;
+    }
+  }
+  return token_head;
+}
+
+token *token_init(subtoken *input)
+{
+  token *foo = malloc(sizeof(token));
+
+  foo->length = input->length;
+  foo->word = input->word;
+  foo->next = NULL;
+
+  return foo;
+}
+
+void *token_debug(token *head)
+{
+  printf("DEBUGGING THE TOKEN STREAM:\n");
+  while (head != NULL)
+  {
+    switch(head->type)
+    {
+      case STARTNEWCOMMAND:
+        printf("STARTNEWCOMMAND\n");
+        break;
+      case AND:
+        printf("AND\n");
+        break;
+      case SEQUENCE:
+        printf("SEQUENCE\n");
+        break;
+      case OR:
+        printf("OR\n");
+        break;
+      case PIPE:
+        printf("PIPE\n");
+        break;
+      case INPUT:
+        printf("INPUT\n");
+        break;
+      case OUTPUT:
+        printf("OUTPUT\n");
+        break;
+      case SUBSHELLLEFT:
+        printf("SUBSHELLLEFT\n");
+        break;
+      case SUBSHELLRIGHT:
+        printf("SUBSHELLRIGHT\n");
+        break;
+      case SIMPLE:
+        printf("SIMPLE\n");
+        break;
+      default:
+        printf("type code: %i\n", head->type);
+        printf("Error, invalid token in final stream\n");
+        abort();
+    }
+    head = head->next;
+  }
+}
+
+
+void *token_destructor(token *head)
+{
+  token *prev = NULL;
+
+  while(head != NULL)
+  {
+    prev = head;
+    if (head->word != NULL)
+      free(head->word);
+    head = head->next;
+    free(prev);
   }
 }

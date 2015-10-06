@@ -15,6 +15,7 @@ enum subtoken_type {
   S_INCOMPLETEOR,
   S_INCOMPLETEAND,
   S_COMMAND,
+  S_COMMENT,
 };
 
 typedef struct Subtoken
@@ -54,10 +55,17 @@ int isOperatorChar(char c);
 int isCommandChar(char c);
 
 
+
+subtoken *subtokenize(const char *word); 
 subtoken *subtoken_init();
 void subtoken_addNew(subtoken **cur_subtoken);
 void subtoken_debug(subtoken *head);
 void subtoken_destructor(subtoken *head);
+
+token *tokenize(subtoken *subtoken_head);
+token *token_init(subtoken *input);
+void *token_debug(token *head);
+void *token_destructor(token *head);
 
 /*
 struct Token *token_init();
