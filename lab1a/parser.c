@@ -120,9 +120,9 @@ void pop_one_operator(stack* cstack, stack* opstack)
 	command_t top_op = stack_top(opstack);
 
 	stack_pop(opstack);
-	command_t one = stack_top(cstack);
-	stack_pop(cstack);
 	command_t two = stack_top(cstack);
+	stack_pop(cstack);
+	command_t one = stack_top(cstack);
 	stack_pop(cstack);
 
 	top_op->u.command[0] = one;
@@ -182,6 +182,7 @@ command_stream_t parse_tokens(token* T)
 	int curwordlen = 0;
 	int simple_started = 0;
 	int subshell_started = 0;
+	int closed_command = 0;
 
 	command_t current = NULL;
 
@@ -233,12 +234,14 @@ command_stream_t parse_tokens(token* T)
 				curword = NULL;
 				curwordlen = 0;
 				stack_push(command_stack, current);
+				closed_command = 1;
+				simple_started = 0;
 			}
 
 			if (T->type == STARTNEWCOMMAND)
 			{
 				if (subshell_started > 0)
-					error_parsing(T->line_num, "semantic error - reached end of command with open subshell");
+					error_parsing(T->line_num, "semantic error - reached end of command with open subshell\n");
 
 				while (op_stack->empty == 0)
 					pop_one_operator(command_stack, op_stack);
@@ -248,14 +251,17 @@ command_stream_t parse_tokens(token* T)
 			}
 			else if (T->type == SUBSHELLLEFT)
 			{
+				if (T->next == NULL || T->next->type == SUBSHELLRIGHT)
+					error_parsing(T->line_num, "semantic error - empty subshell attempted\n");
+
 				current = construct_command(SUBSHELL_COMMAND);
 				stack_push(op_stack, current);
 				subshell_started++;
 			}
 			else if (T->type == SUBSHELLRIGHT)
 			{
-				if (subshell_started == 0)
-					error_parsing(T->line_num, "semantic error - invalid subshell closure attempted");
+				if (subshell_started < 1)
+					error_parsing(T->line_num, "semantic error - invalid subshell closure attempted\n");
 
 				command_t top_op = stack_top(op_stack);
 				while (top_op->type != SUBSHELL_COMMAND)
@@ -269,14 +275,16 @@ command_stream_t parse_tokens(token* T)
 				top_op->u.subshell_command = top_cmd;
 				stack_push(command_stack, top_op);
 				subshell_started--;
+
+				closed_command = 1;
 			}
 
 			// Standard operator handling
 			//if (T->type == PIPE || T->type == AND || T->type == OR || T->type == SEQUENCE)
 			else
 			{
-				if (!simple_started)
-					error_parsing(T->line_num, "semantic error - operator attempted without simple command\n");
+				if (!closed_command)
+					error_parsing(T->line_num, "semantic error - operator attempted without valid command\n");
 
 				if (T->type == SEQUENCE)
 					if (T->next == NULL || T->next->type == STARTNEWCOMMAND)
@@ -304,7 +312,8 @@ command_stream_t parse_tokens(token* T)
 				stack_push(op_stack, current);
 			}
 
-			simple_started = 0;
+			if (T->type != SUBSHELLRIGHT)
+				closed_command = 0;
 		}
 	}
 

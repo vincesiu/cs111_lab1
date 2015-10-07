@@ -400,7 +400,8 @@ token *tokenize(subtoken *subtoken_head)
       {
         if (prev_token->type == INPUT || prev_token->type == OUTPUT)
         {
-          error_parsing(cur_subtoken->line_num, "Newlines may not come after < or >");
+          // TODO: replace this error handler 
+          // error_parsing(cur_subtoken->line_num, "Newlines may not come after < or >");
         }
         if (cur_subtoken->type != S_SUBSHELLLEFT && cur_subtoken->type != S_SUBSHELLRIGHT && cur_subtoken->type != S_COMMAND)
         {
