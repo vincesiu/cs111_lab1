@@ -455,6 +455,7 @@ token *tokenize(subtoken *subtoken_head)
           break;
         case S_INPUT:
           cur_token->type = INPUT;
+          /*
           //hackerz fix
           if (cur_subtoken->next->type != S_COMMAND)
           {
@@ -462,18 +463,11 @@ token *tokenize(subtoken *subtoken_head)
           }
           cur_token->word = cur_subtoken->next->word;
           cur_token->length = cur_subtoken->next->length;
-          cur_subtoken = cur_subtoken->next;
+          //cur_subtoken = cur_subtoken->next;
+          */
           break;
         case S_OUTPUT:
           cur_token->type = OUTPUT;
-          //hackerz fix
-          if (cur_subtoken->next->type != S_COMMAND)
-          {
-            error_parsing(cur_subtoken->line_num, "Simple commands must follow an input or output");
-          }
-          cur_token->word = cur_subtoken->next->word;
-          cur_token->length = cur_subtoken->next->length;
-          cur_subtoken = cur_subtoken->next;
           break;
         case S_SUBSHELLLEFT:
           cur_token->type = SUBSHELLLEFT;
@@ -484,9 +478,28 @@ token *tokenize(subtoken *subtoken_head)
         default:
           error_parsing(cur_subtoken->line_num, "Subtoken processing into token error, most likey an edge case that I missed");
       }
+      
       prev_token = cur_token;
       cur_subtoken = cur_subtoken->next;
     }
+  }
+
+
+  cur_token = token_head;
+  while (cur_token != NULL)
+  {
+    if (cur_token->type == INPUT || cur_token->type == OUTPUT)
+    {
+          //hackerz fix
+          if (cur_token->next == NULL || cur_token->next->type != SIMPLE)
+          {
+            error_parsing(cur_subtoken->line_num, "Simple commands must follow an input or output");
+          }
+          cur_token->word = cur_token->next->word;
+          cur_token->length = cur_token->next->length;
+          cur_token->next = cur_token->next->next;
+    }
+    cur_token = cur_token->next;
   }
   return token_head;
 }

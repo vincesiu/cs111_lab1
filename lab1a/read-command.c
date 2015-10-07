@@ -24,6 +24,11 @@ make_command_stream (int (*get_next_byte) (void *),
 
   subtoken *head_subtoken = subtokenize(get_next_byte, get_next_byte_argument);
   token *head_token = tokenize(head_subtoken);
+  
+  //subtoken_debug(head_subtoken);
+  //token_debug(head_token);
+
+  
   command_stream_t streamtest = parse_tokens(head_token);
   command_stream_t printer = streamtest;
 
