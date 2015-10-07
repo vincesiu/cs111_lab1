@@ -62,7 +62,8 @@ int isCommandChar(char c);
 
 
 
-subtoken *subtokenize(const char *word); 
+subtoken *subtokenize(int (*get_next_byte) (void *), void *get_next_byte_argument);
+//subtoken *subtokenize(const char *word); 
 subtoken *subtoken_init();
 void subtoken_addNew(subtoken **cur_subtoken);
 void subtoken_debug(subtoken *head);
@@ -70,8 +71,8 @@ void subtoken_destructor(subtoken *head);
 
 token *tokenize(subtoken *subtoken_head);
 token *token_init(subtoken *input);
-void *token_debug(token *head);
-void *token_destructor(token *head);
+void token_debug(token *head);
+void token_destructor(token *head);
 
 
 #endif //TOKENIZER_H

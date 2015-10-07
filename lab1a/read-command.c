@@ -2,8 +2,11 @@
 
 #include "command.h"
 #include "command-internals.h"
+#include "parser.h"
+#include "tokenizer.h"
 
 #include <error.h>
+#define NULL 0
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
@@ -19,8 +22,20 @@ make_command_stream (int (*get_next_byte) (void *),
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
 
-   get_next_byte(get_next_byte_argument);
-  return 0;
+  subtoken *head_subtoken = subtokenize(get_next_byte, get_next_byte_argument);
+  token *head_token = tokenize(head_subtoken);
+  command_stream_t streamtest = parse_tokens(head_token);
+  command_stream_t printer = streamtest;
+
+  /*
+  while( printer != NULL)
+  {
+    print_command(printer->tree);
+    printer = printer->next;
+  }
+
+  */
+  return streamtest;
 }
 
 command_t
@@ -28,6 +43,18 @@ read_command_stream (command_stream_t s)
 {
   /* FIXME: Replace this with your implementation too.  */
 
-	s;
-  return 0;
+  while (s != NULL && s->flag_used) 
+  {
+    s = s->next;
+  }
+
+  if (s != NULL)
+  {
+    s->flag_used = true;
+    return s->tree;
+  }
+  else
+  {
+    return NULL;
+  }
 }

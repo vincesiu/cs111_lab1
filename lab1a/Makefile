@@ -15,7 +15,9 @@ TIMETRASH_SOURCES = \
   execute-command.c \
   main.c \
   read-command.c \
-  print-command.c
+  print-command.c \
+	tokenizer.c \
+	parser.c 
 TIMETRASH_OBJECTS = $(subst .c,.o,$(TIMETRASH_SOURCES))
 
 DIST_SOURCES = \

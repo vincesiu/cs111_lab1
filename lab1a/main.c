@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 #include "command.h"
+#include "parser.h"
+#include "tokenizer.h"
 
 static char const *program_name;
 static char const *script_name;

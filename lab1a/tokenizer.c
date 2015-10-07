@@ -7,7 +7,7 @@
 #include "parser.h"
 
 #define INPUTSTRING "(a)(b) c"
-#define DEBUG_TOKENIZER true
+#define DEBUG_TOKENIZER false 
 
 #if DEBUG_TOKENIZER
 
@@ -86,7 +86,8 @@ int isCommandChar(char c)
  * Given a getc function and a stream will return the head of a stream
  * of subtokens, which should be passed to the tokenize function
  */
-subtoken *subtokenize(const char *word) 
+//subtoken *subtokenize(const char *word) 
+subtoken *subtokenize(int (*get_next_byte) (void *), void *get_next_byte_argument)
 {
   subtoken *head = subtoken_init();
   subtoken *cur_subtoken = head; 
@@ -96,9 +97,9 @@ subtoken *subtokenize(const char *word)
   int flag_readChar = false;
   int line_num = 0;
 
-  cur_char = word[0];
+  cur_char = get_next_byte(get_next_byte_argument);
 
-  while (cur_char != '\0')
+  while (cur_char != EOF)
   {
     if (cur_subtoken->type == S_NULLTOKEN)
     {
@@ -153,6 +154,7 @@ subtoken *subtokenize(const char *word)
       }
       else if (cur_char != ' ' && cur_char != '\t')
       {
+        printf("cur_char : %d or %c\n", cur_char, cur_char);
         error_parsing(line_num, "Invalid character in input");
       }
       flag_readChar = true;
@@ -222,8 +224,11 @@ subtoken *subtokenize(const char *word)
 
     if (flag_readChar)
     {
+      /*
       idx++;
       cur_char = word[idx];
+      */
+      cur_char = get_next_byte(get_next_byte_argument);
       flag_readChar = false;
     }
 
@@ -505,7 +510,7 @@ token *token_init(subtoken *input)
  * Outputs a list to standard output of the types of tokens in the
  * linked list of tokens
  */
-void *token_debug(token *head)
+void token_debug(token *head)
 {
   printf("DEBUGGING THE TOKEN STREAM:\n");
   while (head != NULL)
@@ -556,7 +561,7 @@ void *token_debug(token *head)
  * the pointers for *word that subtoken uses, and since subtoken has already
  * freed its memory, then this should be irrelevant.
  */
-void *token_destructor(token *head)
+void token_destructor(token *head)
 {
   token *prev = NULL;
 

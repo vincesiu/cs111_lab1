@@ -94,6 +94,7 @@ void push_command_stream(command_stream_t cs, command_t cmd)
 	cs->last->tree = cmd;
 	cs->last->next = NULL;
 	cs->last->last = NULL;
+  cs->last->flag_used = false;
 }
 
 /* TODO:

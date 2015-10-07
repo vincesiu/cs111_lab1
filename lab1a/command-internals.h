@@ -1,4 +1,5 @@
 // UCLA CS 111 Lab 1 command internals
+#pragma once
 
 enum command_type
   {
