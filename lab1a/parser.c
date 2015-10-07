@@ -184,6 +184,8 @@ command_stream_t parse_tokens(token* T)
 	int subshell_started = 0;
 	int closed_command = 0;
 
+	int prev_lineno = 0;
+
 	command_t current = NULL;
 
 	// malloc(sizeof(struct command));
@@ -315,6 +317,8 @@ command_stream_t parse_tokens(token* T)
 			if (T->type != SUBSHELLRIGHT)
 				closed_command = 0;
 		}
+
+		prev_lineno = T->line_num;
 	}
 
 	if (simple_started)
@@ -327,7 +331,7 @@ command_stream_t parse_tokens(token* T)
 	}
 
 	if (subshell_started > 0)
-		error_parsing(T->line_num, "semantic error - reached end of command with open subshell");
+		error_parsing(prev_lineno, "semantic error - reached end of command with open subshell");
 
 	while (op_stack->empty == 0)
 		pop_one_operator(command_stack, op_stack);
