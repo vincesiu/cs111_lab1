@@ -278,6 +278,10 @@ command_stream_t parse_tokens(token* T)
 				if (!simple_started)
 					error_parsing(T->line_num, "semantic error - operator attempted without simple command\n");
 
+				if (T->type == SEQUENCE)
+					if (T->next == NULL || T->next->type == STARTNEWCOMMAND)
+						continue;
+
 				if (op_stack->empty == 0)
 				{
 					command_t top_op = stack_top(op_stack);
