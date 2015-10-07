@@ -6,7 +6,7 @@
 #include "tokenizer.h"
 #include "parser.h"
 
-#define INPUTSTRING "a;"
+#define INPUTSTRING "(a)(b) c"
 #define DEBUG_TOKENIZER true
 
 #if DEBUG_TOKENIZER
@@ -145,6 +145,7 @@ subtoken *subtokenize(const char *word)
       {
         cur_subtoken->type = S_NEWLINE;
         subtoken_addNew(&cur_subtoken);
+        line_num++;
       }
       else if (cur_char == '#')
       {
@@ -152,8 +153,7 @@ subtoken *subtokenize(const char *word)
       }
       else if (cur_char != ' ' && cur_char != '\t')
       {
-        printf("error: invalid character\n");
-        abort();
+        error_parsing(line_num, "Invalid character in input");
       }
       flag_readChar = true;
     }
@@ -189,8 +189,7 @@ subtoken *subtokenize(const char *word)
       }
       else
       {
-        printf("error: invalid character");
-        abort();
+        error_parsing(cur_subtoken->line_num, "Invalid character & in input");
       }
     }
 
@@ -241,13 +240,11 @@ subtoken *subtokenize(const char *word)
    */
   if (cur_subtoken->type == S_INCOMPLETEOR) 
   {
-    printf("Error: last token was a pipe which should not have happened");
-    abort();
+    error_parsing(cur_subtoken->line_num, "Last token is an operator");
   }
   if (cur_subtoken->type == S_INCOMPLETEAND)
   {
-    printf("Error: incomplete & at the end of the input stream");
-    abort();
+    error_parsing(cur_subtoken->line_num, "Invalid character & in input");
   }
 
   
@@ -378,8 +375,7 @@ token *tokenize(subtoken *subtoken_head)
     }
     if (cur_subtoken->type == S_NULLTOKEN || cur_subtoken->type == S_INCOMPLETEOR || cur_subtoken->type == S_INCOMPLETEAND)
     {
-      printf("Error, invalid token in subtoken stream when tokenizing");
-      abort();
+      error_parsing(cur_subtoken->line_num, "Invalid token in subtoken stream when tokenizing -- this is most likely an edge case that we missed");
     }
     else if (cur_subtoken->type == S_NEWLINE)
     {
@@ -399,13 +395,11 @@ token *tokenize(subtoken *subtoken_head)
       {
         if (prev_token->type == INPUT || prev_token->type == OUTPUT)
         {
-          printf("Error, a newline followed a < or >");
-          abort();
+          error_parsing(cur_subtoken->line_num, "Newlines may not come after < or >");
         }
         if (cur_subtoken->type != S_SUBSHELLLEFT && cur_subtoken->type != S_SUBSHELLRIGHT && cur_subtoken->type != S_COMMAND)
         {
-          printf("Error, newline may not precede this token: %i", cur_subtoken->type);
-          abort();
+          error_parsing(cur_subtoken->line_num, "Newlines may only precede subshell parentheses or a simple command");
         }
 
         if (prev_token->type == SIMPLE)
@@ -458,8 +452,7 @@ token *tokenize(subtoken *subtoken_head)
           //hackerz fix
           if (cur_subtoken->next->type != S_COMMAND)
           {
-            printf("Error: simple command does not follow input");
-            abort();
+            error_parsing(cur_subtoken->line_num, "Simple commands must follow an input or output");
           }
           cur_token->word = cur_subtoken->next->word;
           cur_token->length = cur_subtoken->next->length;
@@ -470,8 +463,7 @@ token *tokenize(subtoken *subtoken_head)
           //hackerz fix
           if (cur_subtoken->next->type != S_COMMAND)
           {
-            printf("Error: simple command does not follow output");
-            abort();
+            error_parsing(cur_subtoken->line_num, "Simple commands must follow an input or output");
           }
           cur_token->word = cur_subtoken->next->word;
           cur_token->length = cur_subtoken->next->length;
@@ -484,8 +476,7 @@ token *tokenize(subtoken *subtoken_head)
           cur_token->type = SUBSHELLRIGHT;
           break;
         default:
-          printf("What happened....");
-          abort();
+          error_parsing(cur_subtoken->line_num, "Subtoken processing into token error, most likey an edge case that I missed");
       }
       prev_token = cur_token;
       cur_subtoken = cur_subtoken->next;
