@@ -291,6 +291,9 @@ command_stream_t parse_tokens(token* T)
 				if (T->type == SEQUENCE)
 					if (T->next == NULL || T->next->type == STARTNEWCOMMAND)
 						continue;
+				
+				if (T->next == NULL || T->next->type == STARTNEWCOMMAND)
+					error_parsing(T->line_num, "semantic error - incomplete operator attempted\n");					
 
 				if (op_stack->empty == 0)
 				{
