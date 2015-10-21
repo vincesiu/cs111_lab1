@@ -218,7 +218,7 @@ command_stream_t parse_tokens(token* T)
 		{
 			command_t top_cmd = stack_top(command_stack);
 
-			if (top_cmd->type == SUBSHELL_COMMAND)
+			if (top_cmd != NULL && top_cmd->type == SUBSHELL_COMMAND)
 				top_cmd->input = T->word;
 			else if (!simple_started)
 				error_parsing(T->line_num, "semantic error - input attempted without command\n");
@@ -229,7 +229,7 @@ command_stream_t parse_tokens(token* T)
 		{
 			command_t top_cmd = stack_top(command_stack);
 
-			if (top_cmd->type == SUBSHELL_COMMAND)
+			if (top_cmd != NULL && top_cmd->type == SUBSHELL_COMMAND)
 				top_cmd->output = T->word;
 			else if (!simple_started)
 				error_parsing(T->line_num, "semantic error - output attempted without command\n");
