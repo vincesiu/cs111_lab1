@@ -86,7 +86,6 @@ int isCommandChar(char c)
  * Given a getc function and a stream will return the head of a stream
  * of subtokens, which should be passed to the tokenize function
  */
-//subtoken *subtokenize(const char *word) 
 subtoken *subtokenize(int (*get_next_byte) (void *), void *get_next_byte_argument)
 {
   subtoken *head = subtoken_init();
@@ -224,10 +223,6 @@ subtoken *subtokenize(int (*get_next_byte) (void *), void *get_next_byte_argumen
 
     if (flag_readChar)
     {
-      /*
-      idx++;
-      cur_char = word[idx];
-      */
       cur_char = get_next_byte(get_next_byte_argument);
       flag_readChar = false;
     }
