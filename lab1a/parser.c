@@ -216,15 +216,25 @@ command_stream_t parse_tokens(token* T)
 		}
 		else if (T->type == INPUT)
 		{
-			if (!simple_started)
-				error_parsing(T->line_num, "semantic error - input attempted without simple command\n");
-			current->input = T->word;
+			command_t top_cmd = stack_top(command_stack);
+
+			if (top_cmd->type == SUBSHELL_COMMAND)
+				top_cmd->input = T->word;
+			else if (!simple_started)
+				error_parsing(T->line_num, "semantic error - input attempted without command\n");
+			else
+				current->input = T->word;
 		}
 		else if (T->type == OUTPUT)
 		{
-			if (!simple_started)
-				error_parsing(T->line_num, "semantic error - output attempted without simple command\n");
-			current->output = T->word;
+			command_t top_cmd = stack_top(command_stack);
+
+			if (top_cmd->type == SUBSHELL_COMMAND)
+				top_cmd->output = T->word;
+			else if (!simple_started)
+				error_parsing(T->line_num, "semantic error - output attempted without command\n");
+			else
+				current->output = T->word;
 		}
 
 		// All other command handling in this else
