@@ -85,7 +85,7 @@ run_simple_command (command_t c)
 
 
 void 
-subshell_propagate_io (command_t c, char *input, char *output)
+subshell_propagate_io (command_t c, char *input, char *output, int *pipe_redirection)
 {
 
   if (c->type == SIMPLE_COMMAND || c->type == SUBSHELL_COMMAND || c->type == PIPE_COMMAND)
@@ -94,11 +94,15 @@ subshell_propagate_io (command_t c, char *input, char *output)
       c->input = input;
     if (c->output == NULL)
       c->output = output;
+
+    c->pipe_redirection[0] = pipe_redirection[0];
+    c->pipe_redirection[1] = pipe_redirection[1];
+    c->pipe_redirection[2] = pipe_redirection[2];
   }
   else 
   {
-    subshell_propagate_io(c->u.command[0], input, output);
-    subshell_propagate_io(c->u.command[1], input, output);
+    subshell_propagate_io(c->u.command[0], input, output, pipe_redirection);
+    subshell_propagate_io(c->u.command[1], input, output, pipe_redirection);
   }
 
 }
@@ -252,7 +256,7 @@ execute_command (command_t c, int time_travel)
       //(cat <file1 && tr a z && cat) < file2
       //(echo lmao > file1 | tr h z) < file2
 
-      subshell_propagate_io(c->u.subshell_command, c->input, c->output);
+      subshell_propagate_io(c->u.subshell_command, c->input, c->output, c->pipe_redirection);
       execute_command(c->u.subshell_command, time_travel);
       c->status = c->u.subshell_command->status;
       
