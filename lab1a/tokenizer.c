@@ -405,7 +405,7 @@ token *tokenize(subtoken *subtoken_head)
           error_parsing(cur_subtoken->line_num, "Newlines may only precede subshell parentheses or a simple command");
         }
 
-        if (prev_token->type == SIMPLE)
+        if (prev_token->type == SIMPLE || prev_token->type == SUBSHELLRIGHT)
         {
           if (count_newline == 1)
           {
