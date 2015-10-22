@@ -1,4 +1,15 @@
-Julien Brundrett 604345463
-Vincent Siu 904280752
+Julien Brundrett 604345463 Vincent Siu 904280752
 
-CS111 Lab 1A: Time Travel Shell
+Time Travel Shell
+
+
+CS111 Lab 1A: Implementation of parsing of command line input.  Comments: No
+known limitations as far as we know. At the moment of writing, it recognizes
+all syntactical errors. 
+
+CS111 Lab 1B: Implentation of execution of command line input.  Comments: All
+the commands except for pipe and subshell are robustly. Implementing subshell
+was good as well. However, subshell and pipe and io redirects have very
+complicated interactions, and we are not sure if we accounted for every side
+case. However, after much experimentation with test cases, we believe that our
+pipe and io redirection implementation is consistent with sh.
