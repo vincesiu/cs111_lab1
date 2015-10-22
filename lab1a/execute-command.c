@@ -84,26 +84,71 @@ run_simple_command (command_t c)
 }
 
 
-void 
-subshell_propagate_io (command_t c, char *input, char *output, int *pipe_redirection)
+void
+subshell_propagate_helper(command_t c, char *input, char *output)
 {
-
   if (c->type == SIMPLE_COMMAND || c->type == SUBSHELL_COMMAND || c->type == PIPE_COMMAND)
   {
     if (c->input == NULL)
       c->input = input;
     if (c->output == NULL)
       c->output = output;
-
-    c->pipe_redirection[0] = pipe_redirection[0];
-    c->pipe_redirection[1] = pipe_redirection[1];
-    c->pipe_redirection[2] = pipe_redirection[2];
   }
   else 
   {
-    subshell_propagate_io(c->u.command[0], input, output, pipe_redirection);
-    subshell_propagate_io(c->u.command[1], input, output, pipe_redirection);
+    subshell_propagate_helper(c->u.command[0], input, output);
+    subshell_propagate_helper(c->u.command[1], input, output);
   }
+}
+
+
+
+
+void 
+subshell_propagate_io (command_t c, char *input, char *output, int *pipe_redirection)
+{
+    command_t command_first = c;
+    command_t command_last = c;
+
+    while(1)
+    {
+      if (command_first->type == SIMPLE_COMMAND || command_first->type == SUBSHELL_COMMAND)
+      {
+        break;
+      }
+      else
+      {
+        command_first = command_first->u.command[0];
+      }
+    }
+
+    while(1)
+    {
+      if (command_last->type == SIMPLE_COMMAND || command_last->type == SUBSHELL_COMMAND)
+      {
+        break;
+      }
+      else
+      {
+        command_last = command_last->u.command[1];
+      }
+    }
+
+
+    if (pipe_redirection[0] == 1 || pipe_redirection[0] == 3)
+    {
+      command_first->pipe_redirection[1] = pipe_redirection[1];
+      command_first->pipe_redirection[0] += 1;
+    }
+
+    if (pipe_redirection[0] == 2 || pipe_redirection[0] == 3)
+    {
+      command_last->pipe_redirection[2] = pipe_redirection[2];
+      command_last->pipe_redirection[0] += 2;
+    }
+
+    subshell_propagate_helper(c, input, output);
+
 
 }
 
