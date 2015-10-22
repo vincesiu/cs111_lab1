@@ -61,6 +61,8 @@ int isCommandChar(char c)
     return true;
   if ('A' <= c && c <= 'Z')
     return true;
+  if ('0' <= c && c <= '9')
+    return true;
   switch(c)
   {
     case '!': 
