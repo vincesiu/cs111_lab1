@@ -106,6 +106,7 @@ void push_command_stream(command_stream_t cs, command_t cmd)
 command_t construct_command(enum command_type t)
 {
 	command_t newcmd = malloc(sizeof(struct command));
+  newcmd->pipe_redirection[0] = 0;
 	newcmd->status = -1;
 	newcmd->input = NULL;
 	newcmd->output = NULL;

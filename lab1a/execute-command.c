@@ -44,6 +44,10 @@ run_simple_command (command_t c)
       dup2(in, 0);
       close(in);
     }
+    else if (c->pipe_redirection[0] == 1 || c->pipe_redirection[0] == 3)
+    {
+      dup2(c->pipe_redirection[1], 0);
+    }
 
     if (c->output != NULL)
     {
@@ -51,13 +55,138 @@ run_simple_command (command_t c)
       dup2(out, 1);
       close(out);
     }
+    else if (c->pipe_redirection[0] >= 2)
+    {
+      dup2(c->pipe_redirection[2], 1);
+    }
+
+    if (c->pipe_redirection[0] == 1)
+      close(c->pipe_redirection[1]);
+    if (c->pipe_redirection[0] == 2)
+      close(c->pipe_redirection[2]);
     
     execvp(c->u.word[0], (c->u.word));
   }
   else 
+  {
     waitpid(pid, &status, 0);
+    c->status = status;
+    if (c->pipe_redirection[0] >= 2)
+    {
+      close(c->pipe_redirection[2]);
+    }
+    if (c->pipe_redirection[0] == 1 || c->pipe_redirection[0] == 3)
+    {
+      close(c->pipe_redirection[1]);
+    }
+  }
+    
+}
 
-  c->status = status;
+
+void 
+subshell_propagate_io (command_t c, char *input, char *output)
+{
+
+  if (c->type == SIMPLE_COMMAND || c->type == SUBSHELL_COMMAND || c->type == PIPE_COMMAND)
+  {
+    if (c->input == NULL)
+      c->input = input;
+    if (c->output == NULL)
+      c->output = output;
+  }
+  else 
+  {
+    subshell_propagate_io(c->u.command[0], input, output);
+    subshell_propagate_io(c->u.command[1], input, output);
+  }
+
+}
+
+
+void
+pipe_connect (command_t c)
+{
+  command_t command_send = c->u.command[0];
+  command_t command_get = c->u.command[1];
+
+//  int *fd = malloc(sizeof(int) * 2);
+  int fd[2];
+  pipe(fd);
+
+  while(1)
+  {
+    if (command_get->type == SIMPLE_COMMAND || command_get->type == SUBSHELL_COMMAND)
+    {
+      if (command_get->input == NULL)
+      {
+        command_get->pipe_redirection[0] += 1;
+        command_get->pipe_redirection[1] = fd[0];
+      }
+      break;
+    }
+    else
+    {
+      command_get = command_get->u.command[0];
+    }
+  }
+
+  while(1)
+  {
+    if (command_send->type == SIMPLE_COMMAND || command_send->type == SUBSHELL_COMMAND)
+    {
+      if (command_send->output == NULL)
+      {
+        command_send->pipe_redirection[0] += 2;
+        command_send->pipe_redirection[2] = fd[1];
+      }
+      break;
+    }
+    else
+    {
+      command_send = command_send->u.command[1];
+    }
+  }
+
+}
+
+
+
+
+void
+pipe_propagate_io (command_t c, char *input, char *output)
+{
+  command_t command_first = c->u.command[0];
+  command_t command_last = c->u.command[1];
+
+  while(1)
+  {
+    if (command_first->type == SIMPLE_COMMAND || command_first->type == SUBSHELL_COMMAND)
+    {
+      if (command_first->input == NULL)
+        command_first->input = input;
+      break;
+    }
+    else
+    {
+      command_first = command_first->u.command[0];
+    }
+  }
+
+  while(1)
+  {
+    if (command_last->type == SIMPLE_COMMAND || command_last->type == SUBSHELL_COMMAND)
+    {
+      if (command_last->output == NULL)
+        command_last->output = output;
+      break;
+    }
+    else
+    {
+      command_last = command_last->u.command[1];
+    }
+  }
+
 }
 
 
@@ -68,8 +197,6 @@ execute_command (command_t c, int time_travel)
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
 
-  command_t subshell_first = NULL;
-  command_t subshell_last = NULL;
 
   switch(c->type)
   {
@@ -78,12 +205,14 @@ execute_command (command_t c, int time_travel)
       break;
 
     case (SEQUENCE_COMMAND):
+      
       execute_command(c->u.command[0], time_travel);
       execute_command(c->u.command[1], time_travel);
       c->status = c->u.command[1]->status;
       break;
 
     case (AND_COMMAND):
+
       execute_command(c->u.command[0], time_travel);
       if (c->u.command[0]->status == 0)
       {
@@ -97,6 +226,7 @@ execute_command (command_t c, int time_travel)
       break;
       
     case (OR_COMMAND):
+
       execute_command(c->u.command[0], time_travel);
       if (c->u.command[0]->status != 0)
       {
@@ -110,41 +240,25 @@ execute_command (command_t c, int time_travel)
       break;
 
     case (SUBSHELL_COMMAND):
-      if (c->input != NULL)
-      {
-        subshell_first = c->u.subshell_command;
+      //interesting example
+      //(cat <file1 && tr a z && cat) < file2
+      //(echo lmao > file1 | tr h z) < file2
 
-        while(subshell_first->type != SIMPLE_COMMAND)
-        {
-          if (subshell_first->type == SUBSHELL_COMMAND)
-            subshell_first = subshell_first->u.subshell_command;
-          else
-            subshell_first = subshell_first->u.command[0];
-        }
-        subshell_first->input = c->input;
-      }
-
-      if (c->output != NULL)
-      {
-        subshell_last = c->u.subshell_command;
-
-        while(subshell_last->type != SIMPLE_COMMAND)
-        {
-          if (subshell_last->type == SUBSHELL_COMMAND)
-            subshell_last = subshell_last->u.subshell_command;
-          else
-            subshell_last = subshell_last->u.command[1];
-        }
-        subshell_last->output = c->output;
-      }
-
+      // subshell_propagate_io(c->u.subshell_command, c->input, c->output);
       execute_command(c->u.subshell_command, time_travel);
       c->status = c->u.subshell_command->status;
       
       break;
 
     case (PIPE_COMMAND):
-      printf("poop");
+      //interesting example
+      //(echo hello | tr h z) 
+      //(echo hello | tr h z < file1)
+      pipe_connect(c);
+      pipe_propagate_io(c, c->input, c->output);
+      execute_command(c->u.command[0], time_travel);
+      execute_command(c->u.command[1], time_travel);
+
       break;
 
     default:

@@ -16,6 +16,12 @@ struct command
 {
   enum command_type type;
 
+  // if pipe[0] == 1, then pipe[1] is active and will override input 
+  // if pipe[0] == 2, then pipe[2] is active and will override output
+  // if pipe[0] == 3, then pipe[1] and pipe[2] are active and will override
+  //      input and output respectively
+  int pipe_redirection[3];
+
   // Exit status, or -1 if not known (e.g., because it has not exited yet).
   int status;
 
