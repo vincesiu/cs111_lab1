@@ -114,32 +114,11 @@ pipe_connect (command_t c)
   int fd[2];
   pipe(fd);
 
-  while(1)
-  {
-    if (command_get->type == SIMPLE_COMMAND || command_get->type == SUBSHELL_COMMAND)
-    {
-      if (command_get->input == NULL)
-      {
-        command_get->pipe_redirection[0] += 1;
-        command_get->pipe_redirection[1] = fd[0];
-      }
-      break;
-    }
-    else
-    {
-      command_get = command_get->u.command[0];
-    }
-  }
 
   while(1)
   {
     if (command_send->type == SIMPLE_COMMAND || command_send->type == SUBSHELL_COMMAND)
     {
-      if (command_send->output == NULL)
-      {
-        command_send->pipe_redirection[0] += 2;
-        command_send->pipe_redirection[2] = fd[1];
-      }
       break;
     }
     else
@@ -148,6 +127,35 @@ pipe_connect (command_t c)
     }
   }
 
+  while(1)
+  {
+    if (command_get->type == SIMPLE_COMMAND || command_get->type == SUBSHELL_COMMAND)
+    {
+      break;
+    }
+    else
+    {
+      command_get = command_get->u.command[0];
+    }
+  }
+
+  /*
+      if (command_send->output == NULL && command_get->input == NULL)
+      {
+        command_send->pipe_redirection[0] += 2;
+        command_send->pipe_redirection[2] = fd[1];
+      }
+
+      if (command_get->input == NULL && command_send->output == NULL)
+      {
+        command_get->pipe_redirection[0] += 1;
+        command_get->pipe_redirection[1] = fd[0];
+      }
+      */
+        command_send->pipe_redirection[0] += 2;
+        command_send->pipe_redirection[2] = fd[1];
+        command_get->pipe_redirection[0] += 1;
+        command_get->pipe_redirection[1] = fd[0];
 }
 
 
@@ -254,8 +262,8 @@ execute_command (command_t c, int time_travel)
       //interesting example
       //(echo hello | tr h z) 
       //(echo hello | tr h z < file1)
-      pipe_connect(c);
       pipe_propagate_io(c, c->input, c->output);
+      pipe_connect(c);
       execute_command(c->u.command[0], time_travel);
       execute_command(c->u.command[1], time_travel);
 
