@@ -252,7 +252,7 @@ execute_command (command_t c, int time_travel)
       //(cat <file1 && tr a z && cat) < file2
       //(echo lmao > file1 | tr h z) < file2
 
-      // subshell_propagate_io(c->u.subshell_command, c->input, c->output);
+      subshell_propagate_io(c->u.subshell_command, c->input, c->output);
       execute_command(c->u.subshell_command, time_travel);
       c->status = c->u.subshell_command->status;
       
