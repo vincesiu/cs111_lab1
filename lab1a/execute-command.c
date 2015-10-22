@@ -2,6 +2,7 @@
 
 #include "command.h"
 #include "command-internals.h"
+#include "parser.h"
 
 #include <error.h>
 #include <unistd.h>
@@ -25,7 +26,7 @@ void
 run_simple_command (command_t c)
 {
   if (c->type != SIMPLE_COMMAND)
-    printf("lol what is dis u gave me a nonsimple command");
+    error_parsing(0, "run_simple_command was passed a non simple command");
 
   pid_t pid;  
   int status = 0;
@@ -34,7 +35,7 @@ run_simple_command (command_t c)
 
   if ((pid = fork()) < 0) 
   {
-    printf("error forking");
+    error_parsing(0, "forking failed when running simple command");
   }
   else if (pid == 0) 
   {
@@ -319,7 +320,7 @@ execute_command (command_t c, int time_travel)
       break;
 
     default:
-      printf("error: invalid command passed u broke our code");
+      error_parsing(0, "Invalid/new command_t type passed to execute function");
   }
 
 	time_travel;

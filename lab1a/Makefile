@@ -33,8 +33,10 @@ timetrash: $(TIMETRASH_OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(TIMETRASH_OBJECTS)
 
 alloc.o: alloc.h
-execute-command.o main.o print-command.o read-command.o: command.h
-execute-command.o print-command.o read-command.o: command-internals.h
+execute-command.o main.o print-command.o read-command.o execute-command.o: command.h
+execute-command.o print-command.o read-command.o execute-command.o: command-internals.h
+parser.o execute-command.o: parser.h
+tokenizer.o: tokenizer.h
 
 dist: $(DISTDIR).tar.gz
 
