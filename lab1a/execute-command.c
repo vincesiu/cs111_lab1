@@ -92,142 +92,38 @@ simple_execute (command_t c)
 }
 
 void
-run_simple_command (command_t c)
-{
-  if (c->type != SIMPLE_COMMAND)
-    error_parsing(0, "run_simple_command was passed a non simple command");
-
-  pid_t pid;  
-  int status = 0;
-
-  int in, out;
-
-  if ((pid = fork()) < 0) 
-  {
-    error_parsing(0, "forking failed when running simple command");
-  }
-  else if (pid == 0) 
-  {
-    if (c->input != NULL)
-    {
-      in = open(c->input, O_RDONLY);
-      dup2(in, 0);
-      close(in);
-    }
-    else if (c->pipe_redirection[0] == 1 || c->pipe_redirection[0] == 3)
-    {
-      dup2(c->pipe_redirection[1], 0);
-    }
-
-    if (c->output != NULL)
-    {
-      out = open(c->output, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR );
-      dup2(out, 1);
-      close(out);
-    }
-    else if (c->pipe_redirection[0] >= 2)
-    {
-      dup2(c->pipe_redirection[2], 1);
-    }
-
-    if (c->pipe_redirection[0] == 1)
-      close(c->pipe_redirection[1]);
-    if (c->pipe_redirection[0] == 2)
-      close(c->pipe_redirection[2]);
-    
-    execvp(c->u.word[0], (c->u.word));
-  }
-  else 
-  {
-    waitpid(pid, &status, 0);
-    c->status = status;
-    if (c->pipe_redirection[0] >= 2)
-    {
-      close(c->pipe_redirection[2]);
-    }
-    if (c->pipe_redirection[0] == 1 || c->pipe_redirection[0] == 3)
-    {
-      close(c->pipe_redirection[1]);
-    }
-  }
-    
-}
-
-
-void
-subshell_propagate_helper_1(command_t c, char *input, char *output)
-{
-  if (c->type == SIMPLE_COMMAND || c->type == SUBSHELL_COMMAND || c->type == PIPE_COMMAND)
-  {
-    if (c->input == NULL)
-      c->input = input;
-    if (c->output == NULL)
-      c->output = output;
-  }
-  else 
-  {
-    subshell_propagate_helper_1(c->u.command[0], input, output);
-    subshell_propagate_helper_1(c->u.command[1], input, output);
-  }
-}
-
-
-void
-subshell_propagate_helper(command_t c, int input, int output)
+subshell_propagate_helper(command_t c, command_t top)
 {
   if (c->type == SIMPLE_COMMAND || c->type == SUBSHELL_COMMAND || c->type == PIPE_COMMAND)
   {
     if (c->r_input == -1)
-      c->r_input = input;
+      c->r_input = top->r_input;
     if (c->r_output == -1)
-      c->r_output = output;
+      c->r_output = top->r_output;
+    if (c->input == NULL)
+      c->input = top->input;
+    if (c->output == NULL)
+      c->output = top->output;
   }
   else 
   {
-    subshell_propagate_helper(c->u.command[0], input, output);
-    subshell_propagate_helper(c->u.command[1], input, output);
+    subshell_propagate_helper(c->u.command[0], top);
+    subshell_propagate_helper(c->u.command[1], top);
   }
 }
-
-
 
 void 
 subshell_propagate_io (command_t c)
 {
-  char *input = c->input;
-  char *output = c->output;
-  int *pipe_redirection = c->pipe_redirection;
-
-  command_t command_first = c;
-  command_t command_last = c;
+  command_t command_first = c->u.subshell_command;
+  command_t command_last = c->u.subshell_command;
 
   while(command_first->type != SIMPLE_COMMAND && command_first->type != SUBSHELL_COMMAND) 
     command_first = command_first->u.command[0];
   while(command_last->type != SIMPLE_COMMAND && command_last->type != SUBSHELL_COMMAND)
     command_last = command_last->u.command[1];
-/*
-  command_first->input = c->input;
-  command_last->output = c->output;
 
-  command_first->r_input = c->r_input;
-  command_last->r_output = c->r_output;
-  */
-  
-/*
-  if (pipe_redirection[0] == 1 || pipe_redirection[0] == 3)
-  {
-    command_first->pipe_redirection[1] = pipe_redirection[1];
-    command_first->pipe_redirection[0] += 1;
-  }
-
-  if (pipe_redirection[0] == 2 || pipe_redirection[0] == 3)
-  {
-    command_last->pipe_redirection[2] = pipe_redirection[2];
-    command_last->pipe_redirection[0] += 2;
-  }
-*/
-  subshell_propagate_helper_1(c->u.subshell_command, c->input, c->output);
-  subshell_propagate_helper(c->u.subshell_command, c->r_input, c->r_output);
+  subshell_propagate_helper(c->u.subshell_command, c);
 }
 
 
@@ -245,8 +141,6 @@ pipe_connect (command_t c)
   while(command_get->type != SIMPLE_COMMAND && command_get->type != SUBSHELL_COMMAND)
     command_get = command_get->u.command[0];
 
-  //New IO
-  //////////////////////////
   if (pipe(fd) == -1)
     error_parsing(0, "Pipe allocation failed");
 
@@ -259,15 +153,7 @@ pipe_connect (command_t c)
     command_send->r_output = fd[PIPE_WRITEEND];
   else
     close(fd[PIPE_WRITEEND]);
-  //New IO
-  //////////////////////////
 
-
-
-  command_send->pipe_redirection[0] += 2;
-  command_send->pipe_redirection[2] = fd[1];
-  command_get->pipe_redirection[0] += 1;
-  command_get->pipe_redirection[1] = fd[0];
 }
 
 
@@ -278,11 +164,6 @@ pipe_propagate_io (command_t c)
 {
   command_t command_first = c->u.command[0];
   command_t command_last = c->u.command[1];
-
-
-
-  char *input = c->input;
-  char *output = c->output;
 
   while(command_first->type != SIMPLE_COMMAND && command_first->type != SUBSHELL_COMMAND)
     command_first = command_first->u.command[0];
@@ -310,8 +191,6 @@ execute_command (command_t c, int time_travel)
     case(SIMPLE_COMMAND):
       simple_apply_io(c);
       simple_execute(c);
-      
-      //run_simple_command(c);
       break;
 
     case (SEQUENCE_COMMAND):
