@@ -29,6 +29,9 @@ struct command
   char *input;
   char *output;
 
+  int r_input;
+  int r_output;
+
   union
   {
     // for AND_COMMAND, SEQUENCE_COMMAND, OR_COMMAND, PIPE_COMMAND:
