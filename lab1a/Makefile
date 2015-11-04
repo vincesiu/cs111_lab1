@@ -15,6 +15,7 @@ TIMETRASH_SOURCES = \
   execute-command.c \
   main.c \
   read-command.c \
+	parallelizer.c \
   print-command.c \
 	tokenizer.c \
 	parser.c 
@@ -24,6 +25,7 @@ DIST_SOURCES = \
   $(TIMETRASH_SOURCES) alloc.h \
 	command.h \
 	command-internals.h \
+	parallelize.h \
 	parser.h \
 	tokenizer.h \
 	Makefile \
@@ -33,9 +35,10 @@ timetrash: $(TIMETRASH_OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(TIMETRASH_OBJECTS)
 
 alloc.o: alloc.h
+parallelizer.o: parallelizer.h
 execute-command.o main.o print-command.o read-command.o execute-command.o: command.h
 execute-command.o print-command.o read-command.o execute-command.o: command-internals.h
-parser.o execute-command.o: parser.h
+parser.o execute-command.o parallelizer.o: parser.h
 tokenizer.o: tokenizer.h
 
 dist: $(DISTDIR).tar.gz
