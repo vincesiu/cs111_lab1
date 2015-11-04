@@ -32,6 +32,8 @@ struct command
   int r_input;
   int r_output;
 
+  int lineno;
+
   union
   {
     // for AND_COMMAND, SEQUENCE_COMMAND, OR_COMMAND, PIPE_COMMAND:
