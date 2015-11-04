@@ -113,6 +113,7 @@ command_t construct_command(enum command_type t)
 	newcmd->input = NULL;
 	newcmd->output = NULL;
 	newcmd->type = t;
+	newcmd->lineno = -1;
 
 	return newcmd;
 }
@@ -210,6 +211,7 @@ command_stream_t parse_tokens(token* T)
 			else
 			{
 				current = construct_command(SIMPLE_COMMAND);
+				current->lineno = T->line_num;
 				simple_started = 1;
 				curwordlen = 1;
 				curword = malloc(sizeof(char*) * 2);
@@ -270,6 +272,7 @@ command_stream_t parse_tokens(token* T)
 					error_parsing(T->line_num, "semantic error - empty subshell attempted\n");
 
 				current = construct_command(SUBSHELL_COMMAND);
+				current->lineno = T->line_num;
 				stack_push(op_stack, current);
 				subshell_started++;
 			}
@@ -327,6 +330,7 @@ command_stream_t parse_tokens(token* T)
 				case OR: current = construct_command(OR_COMMAND); break;
 				default: current = construct_command(SEQUENCE_COMMAND); break;
 				}
+				current->lineno = T->line_num;
 				stack_push(op_stack, current);
 			}
 
