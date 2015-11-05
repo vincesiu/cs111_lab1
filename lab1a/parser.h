@@ -21,6 +21,13 @@ void delete_nodes(node* n);
 void stack_pop(stack* s);
 void stack_delete(stack* s);
 
+typedef struct sorted_wordlist {
+	char * word;
+	struct sorted_wordlist * next;
+} wordlist;
+
+wordlist* wordlist_push(wordlist* l, char* w);
+
 // Should move to read-command
 struct command_stream
 {

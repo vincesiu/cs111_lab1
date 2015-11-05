@@ -364,3 +364,8 @@ command_stream_t parse_tokens(token* T)
 
 	return stream;
 }
+
+wordlist* wordlist_push(wordlist* l, char* w)
+{
+	return NULL;
+}
