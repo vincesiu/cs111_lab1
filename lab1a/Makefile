@@ -25,6 +25,7 @@ DIST_SOURCES = \
   $(TIMETRASH_SOURCES) alloc.h \
 	command.h \
 	command-internals.h \
+	execute-command.h \
 	parallelize.h \
 	parser.h \
 	tokenizer.h \
@@ -36,6 +37,7 @@ timetrash: $(TIMETRASH_OBJECTS)
 
 alloc.o: alloc.h
 parallelizer.o: parallelizer.h
+execute-command.o parallelizer.o: execute-command.h
 execute-command.o main.o print-command.o read-command.o execute-command.o: command.h
 execute-command.o print-command.o read-command.o execute-command.o: command-internals.h
 parser.o execute-command.o parallelizer.o: parser.h

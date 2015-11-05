@@ -2,7 +2,7 @@
 
 #include "command.h"
 #include "command-internals.h"
-#include "parser.h"
+#include "execute-command.h"
 
 #include <error.h>
 #include <unistd.h>
@@ -49,7 +49,7 @@ simple_apply_io (command_t c)
 }
 
 void
-simple_execute (command_t c)
+simple_execute (command_t c, int time_travel)
 {
   if (c->type != SIMPLE_COMMAND)
     error_parsing(0, "simple_execute was passed a non simple command");
@@ -68,25 +68,27 @@ simple_execute (command_t c)
     if (c->r_input != -1)
     {
       dup2(c->r_input, 0);
-      //close(c->r_input);
     }
     if (c->r_output != -1)
     {
       dup2(c->r_output, 1);
-      //close(c->r_output);
     }
 
     execvp(c->u.word[0], (c->u.word));
   }
   else 
   {
-    waitpid(pid, &status, 0);
-    c->status = status;
+    if (!time_travel)
+    {
+      waitpid(pid, &status, 0);
 
-    if (c->r_input != -1)
-      close(c->r_input);
-    if (c->r_output != -1)
-      close(c->r_output);
+      c->status = status;
+
+      if (c->r_input != -1)
+        close(c->r_input);
+      if (c->r_output != -1)
+        close(c->r_output);
+    }
   }
 
 }
@@ -190,7 +192,7 @@ execute_command (command_t c, int time_travel)
   {
     case(SIMPLE_COMMAND):
       simple_apply_io(c);
-      simple_execute(c);
+      simple_execute(c, time_travel);
       break;
 
     case (SEQUENCE_COMMAND):
@@ -254,7 +256,6 @@ execute_command (command_t c, int time_travel)
       error_parsing(0, "Invalid/new command_t type passed to execute function");
   }
 
-	time_travel;
 
 }
 

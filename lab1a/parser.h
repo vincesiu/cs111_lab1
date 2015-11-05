@@ -28,6 +28,11 @@ struct command_stream
 	struct command_stream * next;
 	struct command_stream * last;
   int flag_used;
+
+  int flag_commandrunning;
+  int flag_commanddone;
+  struct command_stream *dependency_list;
+  int dependency_num;
 };
 
 void push_command_stream(command_stream_t cs, command_t cmd);
