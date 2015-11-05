@@ -6,7 +6,6 @@
 #include "tokenizer.h"
 
 #include <error.h>
-#define NULL 0
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
