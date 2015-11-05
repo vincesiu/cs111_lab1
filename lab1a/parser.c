@@ -80,18 +80,22 @@ void stack_delete(stack* s)
 
 
 
-void push_command_stream(command_stream_t cs, command_t cmd)
+void push_command_stream(command_stream_t cs, command_t cmd, wordlist* read, wordlist* write)
 {
 	if (cs->last == NULL)
 	{
 		cs->tree = cmd;
 		cs->last = cs;
+		cs->read_list = read;
+		cs->write_list = write;
 		return;
 	}
 
 	cs->last->next = malloc(sizeof(struct command_stream));
 	cs->last = cs->last->next;
 	cs->last->tree = cmd;
+	cs->last->read_list = read;
+	cs->last->write_list = write;
 	cs->last->next = NULL;
 	cs->last->last = NULL;
   cs->last->flag_used = false;
@@ -181,6 +185,9 @@ command_stream_t parse_tokens(token* T)
 	stack* command_stack = stack_init();
 	stack* op_stack = stack_init();
 
+	wordlist* read_files = NULL;
+	wordlist* write_files = NULL;
+
 	// simple command helpers
 	char ** curword = NULL;
 	int curwordlen = 0;
@@ -218,6 +225,7 @@ command_stream_t parse_tokens(token* T)
 				curword[0] = T->word;
 				curword[1] = NULL;
 			}
+			read_files = wordlist_push(read_files, T->word);
 		}
 		else if (T->type == INPUT)
 		{
@@ -229,6 +237,7 @@ command_stream_t parse_tokens(token* T)
 				error_parsing(T->line_num, "semantic error - input attempted without command\n");
 			else
 				current->input = T->word;
+			read_files = wordlist_push(read_files, T->word);
 		}
 		else if (T->type == OUTPUT)
 		{
@@ -240,6 +249,7 @@ command_stream_t parse_tokens(token* T)
 				error_parsing(T->line_num, "semantic error - output attempted without command\n");
 			else
 				current->output = T->word;
+			write_files = wordlist_push(write_files, T->word);
 		}
 
 		// All other command handling in this else
@@ -263,7 +273,9 @@ command_stream_t parse_tokens(token* T)
 				while (op_stack->empty == 0)
 					pop_one_operator(command_stack, op_stack);
 
-				push_command_stream(stream, stack_top(command_stack));
+				push_command_stream(stream, stack_top(command_stack), read_files, write_files);
+				read_files = NULL;
+				write_files	= NULL;
 				stack_pop(command_stack);
 			}
 			else if (T->type == SUBSHELLLEFT)
@@ -355,7 +367,9 @@ command_stream_t parse_tokens(token* T)
 
 	while (op_stack->empty == 0)
 		pop_one_operator(command_stack, op_stack);
-	push_command_stream(stream, stack_top(command_stack));
+	push_command_stream(stream, stack_top(command_stack), read_files, write_files);
+		read_files = NULL;
+		write_files	= NULL;
 	stack_pop(command_stack);
 
 	// Free stack memory
@@ -367,7 +381,55 @@ command_stream_t parse_tokens(token* T)
 
 wordlist* wordlist_push(wordlist* l, char* w)
 {
-  l;
-  w;
-	return NULL;
+	wordlist* it = l;
+	wordlist* prev = it;
+	while (it != NULL)
+	{
+		int cmp = strcmp(it->word, w);
+		if (cmp > 0)
+			break;
+		else if (cmp == 0)
+			return l;
+		prev = it;
+		it = it->next;
+	}
+
+	if (it == NULL)
+	{
+		it = malloc(sizeof(wordlist));
+		it->word = w;
+		it->next = NULL;
+
+		if (l == NULL)
+			l = it;
+		else
+			prev->next = it;
+	}
+	else
+	{
+		if (it == prev)
+		{
+			l = malloc(sizeof(wordlist));
+			l->word = w;
+			l->next = it;
+		}
+		else
+		{
+			wordlist* temp = it;
+			it = malloc(sizeof(wordlist));
+			prev->next = it;
+			it->word = w;
+			it->next = temp;
+		}
+	}
+	return l;
+}
+
+void print_wordlist(wordlist* w)
+{
+	while (w != NULL)
+	{
+		printf("%s\n", w->word);
+		w = w->next;
+	}
 }

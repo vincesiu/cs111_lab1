@@ -28,6 +28,7 @@ typedef struct sorted_wordlist {
 } wordlist;
 
 wordlist* wordlist_push(wordlist* l, char* w);
+void print_wordlist(wordlist* w);
 
 // Should move to read-command
 struct command_stream
@@ -42,9 +43,11 @@ struct command_stream
   struct command_stream *dependency_list;
   int dependency_num;
   pid_t pid;
+  wordlist* read_list;
+  wordlist* write_list;
 };
 
-void push_command_stream(command_stream_t cs, command_t cmd);
+void push_command_stream(command_stream_t cs, command_t cmd, wordlist* read, wordlist* write);
 void error_parsing(int lineno, char* msg);
 
 command_t construct_command(enum command_type t);
