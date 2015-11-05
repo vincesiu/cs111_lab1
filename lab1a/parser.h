@@ -2,6 +2,7 @@
 #include "command-internals.h"
 #include "tokenizer.h"
 #include <sys/types.h>
+#include <string.h>
 
 typedef struct cmd_node {
 	command_t c;
