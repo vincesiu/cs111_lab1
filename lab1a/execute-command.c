@@ -29,7 +29,7 @@ void
 simple_apply_io (command_t c)
 {
   if (c->type != SIMPLE_COMMAND)
-    error_parsing(0, "simple_apply_io was passed a non simple command");
+    error_parsing(c->lineno, "simple_apply_io was passed a non simple command");
 
   if (c->input != NULL)
   {
@@ -49,10 +49,10 @@ simple_apply_io (command_t c)
 }
 
 void
-simple_execute (command_t c, int time_travel)
+simple_execute (command_t c)
 {
   if (c->type != SIMPLE_COMMAND)
-    error_parsing(0, "simple_execute was passed a non simple command");
+    error_parsing(c->lineno, "simple_execute was passed a non simple command");
 
   pid_t pid;
   int status = 0;
@@ -61,7 +61,7 @@ simple_execute (command_t c, int time_travel)
 
   if ((pid = fork()) < 0)
   {
-    error_parsing(0, "forking failed when running simple command");
+    error_parsing(c->lineno, "forking failed when running simple command");
   }
   else if (pid == 0)
   {
@@ -78,17 +78,14 @@ simple_execute (command_t c, int time_travel)
   }
   else 
   {
-    if (!time_travel)
-    {
-      waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0);
 
-      c->status = status;
+    c->status = status;
 
-      if (c->r_input != -1)
-        close(c->r_input);
-      if (c->r_output != -1)
-        close(c->r_output);
-    }
+    if (c->r_input != -1)
+      close(c->r_input);
+    if (c->r_output != -1)
+      close(c->r_output);
   }
 
 }
@@ -144,7 +141,7 @@ pipe_connect (command_t c)
     command_get = command_get->u.command[0];
 
   if (pipe(fd) == -1)
-    error_parsing(0, "Pipe allocation failed");
+    error_parsing(c->lineno, "Pipe allocation failed");
 
   if (command_get->r_input == -1)
    command_get->r_input = fd[PIPE_READEND]; 
@@ -192,7 +189,7 @@ execute_command (command_t c, int time_travel)
   {
     case(SIMPLE_COMMAND):
       simple_apply_io(c);
-      simple_execute(c, time_travel);
+      simple_execute(c);
       break;
 
     case (SEQUENCE_COMMAND):
@@ -253,7 +250,7 @@ execute_command (command_t c, int time_travel)
       break;
 
     default:
-      error_parsing(0, "Invalid/new command_t type passed to execute function");
+      error_parsing(c->lineno, "Invalid/new command_t type passed to execute function");
   }
 
 

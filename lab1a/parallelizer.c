@@ -1,7 +1,8 @@
 #include "parallelizer.h"
 #include "execute-command.h"
+#include <stdlib.h>
+#include <unistd.h>
 
-#define NULL 0
 
 void parallel_execute(command_stream_t head)
 {
@@ -10,11 +11,31 @@ void parallel_execute(command_stream_t head)
 
   parallel_apply_dependencies(head);
 
-  while (head != NULL)
+  int num_running = 0;
+  pid_t pid;
+
+  do 
   {
-    execute_command(head->tree, 0);
-    head = head->next;
-  }
+    if (current->dependency_num == 0)
+    {
+      if ((pid = fork()) < 0)
+      {
+        error_parsing(0, "forking failed when trying to parallelize");
+      }
+      else if (pid == 0)
+      {
+        execute_command(current->tree, 0);
+        exit(EXIT_SUCCESS);
+      }
+      else
+      {
+        current->flag_commandrunning = 1;
+        current->pid = pid;
+        num_running++;
+      }
+    }
+    current = current->next;
+  } while (num_running != 0);
   
   return;
 }

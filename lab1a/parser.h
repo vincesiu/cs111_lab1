@@ -1,6 +1,7 @@
 #pragma once
 #include "command-internals.h"
 #include "tokenizer.h"
+#include <sys/types.h>
 
 typedef struct cmd_node {
 	command_t c;
@@ -40,6 +41,7 @@ struct command_stream
   int flag_commanddone;
   struct command_stream *dependency_list;
   int dependency_num;
+  pid_t pid;
 };
 
 void push_command_stream(command_stream_t cs, command_t cmd);
