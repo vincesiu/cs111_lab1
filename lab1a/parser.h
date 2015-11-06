@@ -31,6 +31,13 @@ typedef struct sorted_wordlist {
 wordlist* wordlist_push(wordlist* l, char* w);
 void print_wordlist(wordlist* w);
 
+struct command_stream;
+
+typedef struct dependency_list {
+  struct command_stream *cur_stream;
+  struct dependency_list *next;
+} dependency_list;
+
 // Should move to read-command
 struct command_stream
 {
@@ -41,12 +48,13 @@ struct command_stream
 
   int flag_commandrunning;
   int flag_commanddone;
-  struct command_stream *dependency_list;
+  dependency_list *dependency_list;
   int dependency_num;
   pid_t pid;
   wordlist* read_list;
   wordlist* write_list;
 };
+
 
 void push_command_stream(command_stream_t cs, command_t cmd, wordlist* read, wordlist* write);
 void error_parsing(int lineno, char* msg);
