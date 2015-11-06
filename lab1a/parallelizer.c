@@ -107,9 +107,14 @@ void parallel_apply_dependencies(command_stream_t head)
             if (current_list != NULL)
             {
               for ( current_list = current_dep->dependency_list; current_list->next != NULL; current_list = current_list->next );
+              current_list->next = malloc(sizeof(dependency_list));
+              current_list->next->cur_stream = forward_dep; 
             }
-            current_list->next = malloc(sizeof(dependency_list));
-            current_list->next->cur_stream = forward_dep; 
+            else
+            {
+              current_dep->dependency_list = malloc(sizeof(dependency_list));
+              current_dep->dependency_list->cur_stream = forward_dep;
+            }
           }
         }
       }
@@ -126,9 +131,14 @@ void parallel_apply_dependencies(command_stream_t head)
             if (current_list != NULL)
             {
               for ( current_list = current_dep->dependency_list; current_list->next != NULL; current_list = current_list->next );
+              current_list->next = malloc(sizeof(dependency_list));
+              current_list->next->cur_stream = forward_dep; 
             }
-            current_list->next = malloc(sizeof(dependency_list));
-            current_list->next->cur_stream = forward_dep; 
+            else
+            {
+              current_dep->dependency_list = malloc(sizeof(dependency_list));
+              current_dep->dependency_list->cur_stream = forward_dep;
+            }
           }
         }
         for (dep_word = current_dep->read_list; dep_word != NULL; dep_word = dep_word->next )
@@ -140,9 +150,14 @@ void parallel_apply_dependencies(command_stream_t head)
             if (current_list != NULL)
             {
               for ( current_list = current_dep->dependency_list; current_list->next != NULL; current_list = current_list->next );
+              current_list->next = malloc(sizeof(dependency_list));
+              current_list->next->cur_stream = forward_dep; 
             }
-            current_list->next = malloc(sizeof(dependency_list));
-            current_list->next->cur_stream = forward_dep; 
+            else
+            {
+              current_dep->dependency_list = malloc(sizeof(dependency_list));
+              current_dep->dependency_list->cur_stream = forward_dep;
+            }
           }
         }
       }
